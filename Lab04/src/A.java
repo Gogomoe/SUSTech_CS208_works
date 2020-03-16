@@ -71,30 +71,11 @@ public class A {
         }
         lock(i, j);
 
-//        int remain0 = 0;
-//        int remain0X = 0;
-//        int remain0Y = 0;
-//        for (int[] ints : dir) {
-//            int y = i + ints[0];
-//            int x = j + ints[1];
-//            if (!canReach(y, x)) {
-//                continue;
-//            }
-//            if (open[y][x] == 0) {
-//                remain0++;
-//                remain0X = x;
-//                remain0Y = y;
-//            }
-//        }
         boolean reachUp = canReach(i - 1, j);
         boolean reachDown = canReach(i + 1, j);
         boolean reachLeft = canReach(i, j - 1);
         boolean reachRight = canReach(i, j + 1);
 
-//        if (remain0 >= 2) {
-//            unlock(i, j);
-//            return;
-//        } else
         if ((!inBound(i, j - 1) || visited[i][j - 1]) && (inBound(i, j + 1) && visited[i][j + 1]) && reachUp && reachDown) {
             unlock(i, j);
             return;
@@ -123,6 +104,14 @@ public class A {
             dfs(i - 1, j, cnt + 1);
         } else if (i == n - 2 && !reachUp && reachDown && reachRight) {
             dfs(i, j + 1, cnt + 1);
+        } else if (reachUp && open[i - 1][j] == 1) {
+            dfs(i - 1, j, cnt + 1);
+        } else if (reachDown && open[i + 1][j] == 1) {
+            dfs(i + 1, j, cnt + 1);
+        } else if (reachLeft && open[i][j - 1] == 1) {
+            dfs(i, j - 1, cnt + 1);
+        } else if (reachRight && open[i][j + 1] == 1) {
+            dfs(i, j + 1, cnt + 1);
         } else {
             dfs(i - 1, j, cnt + 1);
             dfs(i + 1, j, cnt + 1);
@@ -143,24 +132,24 @@ public class A {
 
     private static void lock(int i, int j) {
         visited[i][j] = true;
-//        for (int k = 0; k < dir.length; k++) {
-//            int y = i + dir[k][0];
-//            int x = j + dir[k][1];
-//            if (canReach(y, x)) {
-//                open[y][x]--;
-//            }
-//        }
+        for (int k = 0; k < dir.length; k++) {
+            int y = i + dir[k][0];
+            int x = j + dir[k][1];
+            if (canReach(y, x)) {
+                open[y][x]--;
+            }
+        }
     }
 
     private static void unlock(int i, int j) {
         visited[i][j] = false;
-//        for (int k = 0; k < dir.length; k++) {
-//            int y = i + dir[k][0];
-//            int x = j + dir[k][1];
-//            if (canReach(y, x)) {
-//                open[y][x]++;
-//            }
-//        }
+        for (int k = 0; k < dir.length; k++) {
+            int y = i + dir[k][0];
+            int x = j + dir[k][1];
+            if (canReach(y, x)) {
+                open[y][x]++;
+            }
+        }
     }
 
     private static QuickReader scanner = new QuickReader(System.in);
