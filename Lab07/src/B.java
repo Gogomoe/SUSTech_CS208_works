@@ -1,40 +1,22 @@
-import java.io.*;
+import java.io.DataInputStream;
+import java.io.IOException;
 import java.util.*;
 
-public class A {
+public class B {
 
     public static void main(String[] args) throws IOException {
         int n = scanner.nextInt();
-        int m = scanner.nextInt();
 
-        EdgeWeightGraph graph = new EdgeWeightGraph(n * m);
-        int[] lastLine = new int[m];
-        int[] line = new int[m];
+        EdgeWeightGraph graph = new EdgeWeightGraph(n + 1);
 
         for (int i = 0; i < n; i++) {
-            for (int j = 0; j < m; j++) {
-                line[j] = scanner.nextInt();
-
-                int it = i * m + j;
-
-                if (i != 0) {
-                    int up = (i - 1) * m + j;
-                    int weight = lastLine[j] ^ line[j];
-                    graph.addEdge(new Edge(it, up, weight));
-                }
-
-                if (j != 0) {
-                    int left = i * m + j - 1;
-                    int weight = line[j - 1] ^ line[j];
-                    graph.addEdge(new Edge(it, left, weight));
-                }
+            for (int j = i + 1; j <= n; j++) {
+                int it = scanner.nextInt();
+                graph.addEdge(new Edge(i, j, it));
             }
-            lastLine = line;
-            line = new int[m];
         }
 
         Kruskal kruskal = new Kruskal(graph);
-
         long cost = 0;
         for (Edge edge : kruskal.mst) {
             cost += edge.weight;
@@ -52,18 +34,12 @@ public class A {
         public Kruskal(EdgeWeightGraph graph) {
             int nodes = graph.nodes;
             mst = new ArrayList<>();
+
+            MinPQ pq = MinPQ.fromArray(graph.edgeList);
             UnionFindSet uf = new UnionFindSet(nodes);
 
-            Edge[] arr = graph.edgeList.stream().sorted(new Comparator<Edge>() {
-                @Override
-                public int compare(Edge o1, Edge o2) {
-                    return o1.weight - o2.weight;
-                }
-            }).toArray(Edge[]::new);
-            int index = 0;
-
-            while (index != arr.length && mst.size() < nodes - 1) {
-                Edge e = arr[index++];
+            while (pq.size > 0 && mst.size() < nodes - 1) {
+                Edge e = pq.deleteMin();
                 int a = e.p1, b = e.p2;
                 if (uf.connected(a, b)) {
                     continue;
@@ -75,28 +51,89 @@ public class A {
 
     }
 
+    private static class MinPQ {
+
+        private Edge[] arr;
+        private int size;
+
+        Comparator<Edge> comp = new Comparator<Edge>() {
+            @Override
+            public int compare(Edge o1, Edge o2) {
+                return o1.weight - o2.weight;
+            }
+        };
+
+        static MinPQ fromArray(Collection<Edge> edges) {
+            MinPQ p = new MinPQ();
+            p.arr = new Edge[edges.size() + 1];
+            p.size = edges.size();
+
+            int pos = 1;
+            for (Edge edge : edges) {
+                p.arr[pos] = edge;
+                pos++;
+            }
+            for (int i = p.size / 2; i >= 1; i--) {
+                p.sink(i);
+            }
+            return p;
+        }
+
+        private void swim(int index) {
+            while (index > 1 && comp.compare(arr[index], arr[index / 2]) < 0) {
+                swap(index, index / 2);
+                index /= 2;
+            }
+        }
+
+        private void sink(int index) {
+            while (index * 2 <= size) {
+                int j = index * 2;
+                if (j + 1 <= size && comp.compare(arr[j + 1], arr[j]) < 0) {
+                    j++;
+                }
+                if (comp.compare(arr[index], arr[j]) > 0) {
+                    swap(index, j);
+                } else {
+                    break;
+                }
+                index = j;
+            }
+        }
+
+        private Edge deleteMin() {
+            Edge min = arr[1];
+            swap(1, size);
+            size--;
+            sink(1);
+            return min;
+        }
+
+        private void insert(Edge x) {
+            size++;
+            arr[size] = x;
+            swim(size);
+        }
+
+        private void swap(int i1, int i2) {
+            Edge temp = arr[i1];
+            arr[i1] = arr[i2];
+            arr[i2] = temp;
+        }
+
+    }
+
     private static class EdgeWeightGraph {
 
         private final int nodes;
-        private int edges;
-
-        private ArrayList<Edge>[] adj;
         private ArrayList<Edge> edgeList = new ArrayList<>();
 
         EdgeWeightGraph(int nodes) {
             this.nodes = nodes;
-            this.edges = 0;
-            adj = new ArrayList[nodes];
-            for (int i = 0; i < adj.length; i++) {
-                adj[i] = new ArrayList<>();
-            }
         }
 
         void addEdge(Edge e) {
             edgeList.add(e);
-            adj[e.p1].add(e);
-            adj[e.p2].add(e);
-            edges++;
         }
     }
 
