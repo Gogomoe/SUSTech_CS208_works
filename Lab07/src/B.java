@@ -56,7 +56,7 @@ public class B {
         private Edge[] arr;
         private int size;
 
-        Comparator<Edge> comp = new Comparator<Edge>() {
+        private static final Comparator<Edge> comp = new Comparator<Edge>() {
             @Override
             public int compare(Edge o1, Edge o2) {
                 return o1.weight - o2.weight;
